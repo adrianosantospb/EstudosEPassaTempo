@@ -1,95 +1,94 @@
-'''
-    Exemplo de implementação de uma rede neural do tipo Perceptron
-    Dev: Adriano Santos
-'''
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar  6 17:43:27 2019
+
+@author: Adriano Santos
+"""
 
 import random
 
-class Perceptron():
-
-    def __init__(self, entradas, saidas, taxa_aprendizado=0.1, epocas=1000):
-
-        self.entradas = entradas
-        self.saidas = saidas
+class Perceptron:
+    
+    def __init__(self, descritores, labels, taxa_aprendizado=0.1, epocas=10):
+        self.descritores = descritores
+        self.labels = labels
         self.taxa_aprendizado = taxa_aprendizado
         self.epocas = epocas
-        self.quantidade_entradas = len(entradas)
-        self.quantidade_atributos = len(entradas[0])
         self.pesos = []
 
-    # Função de treinamento
-    def treinar(self):
-        # Obtem os pesos
-        for i in range(self.quantidade_atributos):
+    # Definição da função de treinamento
+    def treinamento(self, funcao = 0):
+
+        # Iniciando o treinamento
+        print ('Iniciando o processo de treinamento.')
+        
+        # ********************* Instanciando os pesos *********************
+        pesos = []
+        # Limiar de ativação
+        limiar_ativacao = -1
+
+        for i in range(len(self.descritores[0])):
             self.pesos.append(random.random())
 
-        # Valor dos pesos iniciais    
-        print ('Os pesos foram ', self.pesos)
-        # Inicia o contador de épocas
-        contador_epocas = 0
-        # Inicia a varivavel auxiliar de status
-        erro = True
-
-        # Loop de aprendizado
-        while True:
-            erro = False    
-            for i in range(self.quantidade_entradas):
+        # ********************* Inicia Treinamento  *********************
+        for i in range(self.epocas):
+            print('Epoca ', i + 1)
+            # Analisa os descritores
+            for j in range(len(self.descritores)):
                 # Potencial de ativação
                 u = 0
-                for j in range(self.quantidade_atributos):
-                    u +=  self.pesos[j] * self.entradas[i][j]   
-                u = u + self.__constante_teta()
-                # Valor de saída
-                y = self.degrau(u)
-                # Atualização dos pesos
-                if y != self.saidas[i]:
-                    for j in range(self.quantidade_atributos):
-                        self.pesos[j] = self.pesos[j] + self.taxa_aprendizado * (self.saidas[i] - y) * self.entradas[i][j]
-                        erro = True
-                # Incrementa época
-                contador_epocas +=1   
-            # Condição de parada
-            if not erro or contador_epocas > self.epocas:
-                break
-        # Infoma a quantidade de épocas
-        print ('Épocas utilizadas para o treinamento %d' % contador_epocas)
-        # Valor dos pesos iniciais    
-        print ('Pesos finais: ', self.pesos)
+                # Combinador Linear
+                x = self.descritores[j]
+                for k in range (len(x)):
+                    u += x[k] * self.pesos[k]
+                
+                # Limiar de ativação (Estático)
+                u = u + limiar_ativacao
 
-    # Função de teste
-    def teste(self, amostra):
+                # Obtem saída
+                y = self.__degrau(u) if funcao == 0 else self.__bipolar(u) 
+                
+                # Regra de Hebb
+                if y != self.labels[j]:
+                    for l in range(len(self.pesos)):
+                        self.pesos[l] = self.pesos[l] + self.taxa_aprendizado * (self.labels[j][0] - y) * x[l]        
+
+        print ('Finalizando o processo de treinamento.')
+    
+    # Função de classificação
+    def classificar(self, label):
         u = 0
-        for i in range(len(amostra)):
-            u +=  self.pesos[i] * amostra[i]   
-        u = u + self.__constante_teta()
+        for i in range(len(label)):
+            u +=  self.pesos[i] * label[i]   
+        u = u - 1
         # Valor de saída
-        print ('Saída: %d' % self.degrau(u))
-
+        print ('Saída: %d' % self.__degrau(u))
     
     # Função degrau
-    def degrau(self, u):
-        return 1 if u > 0 else 0
+    def __degrau(self, u):
+        return 1 if u >= 1 else 0
 
-    # constante Teta        
-    def __constante_teta(self):
-        return -1
+    # Função bipolar
+    def __bipolar(self, u):
+        return 1 if u >= 1 else -1
 
+ 
 
-# Valores de entrada e saída para o treinamento
-#entradas = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0],  [1, 1, 1]]
-#saidas = [0, 1, 1, 1, 1, 1, 1, 1]
-
-# Para uma porta AND
-entradas = [[0, 0], [0, 1], [1, 0], [1, 1]]
-saidas = [0, 0, 0, 1]
-
-
-# Cria uma rede
-rede = Perceptron(entradas, saidas)
-rede.treinar()
-
-
-# Define a saída
-amostra = [0, 1]
-print('Entrada de teste', amostra)
-rede.teste(amostra)
+# Teste da rede Perceptron
+if __name__ == "__main__":
+    #  ******************** Dados para o treinamento ******************** 
+    # Exemplo 1
+    # descritores = [[0, 0], [0, 1], [1, 0], [1, 1]]
+    # labels = [[0], [0], [0], [1]]
+    
+    # Exemplo 2
+    descritores = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0],  [1, 1, 1]]
+    labels = [[0], [1], [1], [1], [1], [1], [1], [1]]
+    
+    # Instanciando o objeto
+    p = Perceptron(descritores, labels, taxa_aprendizado=0.05, epocas=10)
+    # Realizando o treinamento
+    p.treinamento(funcao=0)
+    # Realizando o processo de classificação
+    p.classificar([1, 1, 1])
